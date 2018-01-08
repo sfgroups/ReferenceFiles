@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-mongo-pv
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mangodb
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mongo-sc
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mangodb-mongodb
+spec:
+  storageClassName: mongo-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+

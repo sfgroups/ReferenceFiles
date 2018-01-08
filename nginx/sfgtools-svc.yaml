@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sfgtools
+  labels:
+    k8s-app: sfgtools
+    tier: network-tools
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: sfgtools
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: sfgtools       
+        image: sfgroups/alphine_nettools        
+        env: 
+        - name: SSHD
+          value: TURE
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace       
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name        
+        ports:
+        - containerPort: 22
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: sfgtools-svc
+spec:  
+  ports:
+    - protocol: TCP
+      port: 80        
+  type: NodePort 
+  selector:
+    k8s-app: sfgtools  
+    
+    
+    

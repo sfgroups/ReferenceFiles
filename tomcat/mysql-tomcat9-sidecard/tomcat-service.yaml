@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat9-svc
+  labels:
+    app: tomcat9-svc  
+spec:
+  ports:
+  - nodePort: 31111
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    k8s-app: tomcat9
+  sessionAffinity: None
+  type: NodePort
+ 

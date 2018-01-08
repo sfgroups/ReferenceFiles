@@ -1,0 +1,50 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: tomcat9
+  labels:
+    k8s-app: tomcat9
+    tier: web
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: tomcat9
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - image: sfgroups/sample:1.0
+        name: war
+        command: ["sh","-c","tail -f /dev/null"]
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "cp"
+                - "/sample.war"
+                - "/app"
+        volumeMounts:
+        - mountPath: /app
+          name: app-volume
+      - name: tomcat9
+        image: tomcat:9.0.2-jre8-alpine
+        volumeMounts:
+        - mountPath: /usr/local/tomcat/webapps
+          name: app-volume
+        env:        
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 8080
+      volumes:
+      - name: app-volume
+        emptyDir: {}
+
+

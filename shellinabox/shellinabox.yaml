@@ -1,0 +1,42 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: shellinabox
+  labels:
+    k8s-app: shellinabox
+    tier: frontend
+  namespace: default
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        k8s-app: shellinabox
+    spec:      
+      containers:
+      - name: shellinabox        
+        image: sspreitzer/shellinabox:latest
+        env:
+        - name: SIAB_PASSWORD
+          value: abc123
+        - name: SIAB_SUDO
+          value: 'true'        
+        ports:
+        - containerPort: 4200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shellinabox-svc
+  labels:
+    app: shellinabox-svc
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+    - port: 4200
+      targetPort: 4200     
+  selector:
+    k8s-app: shellinabox
+  sessionAffinity: ClientIP         
+        

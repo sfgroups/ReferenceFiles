@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webserver-blue
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        type: webserver
+        color: blue
+    spec:
+      containers:
+      - image: nginx:1.12.0
+        name: webserver-container
+        ports:
+        - containerPort: 80
+          name: http-server
+      nodeSelector:        
+        svrtype: web

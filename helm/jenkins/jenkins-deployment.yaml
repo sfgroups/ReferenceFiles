@@ -1,0 +1,31 @@
+     
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: jenkins-deployment
+  labels:
+    app: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins        
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - name: jenkins
+        image: jenkins/jenkins:lts
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: /var/jenkins_home
+          name: jenkins-volume
+      volumes:
+      - name: jenkins-volume
+        hostPath:
+            # directory location on host
+            path: /jenkins-data           
+            type: DirectoryOrCreate

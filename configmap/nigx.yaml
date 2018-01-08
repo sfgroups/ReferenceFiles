@@ -1,0 +1,43 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:  
+  labels:
+    run: nginx
+  name: nginx-config 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:     
+      labels:
+        name: nginx
+        tier: frontend
+    spec:
+      containers:
+      - image: sfgroups/nettools
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        lifecycle:
+            preStop:
+              exec:
+                command: ["/usr/sbin/nginx","-s","quit"] 
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: nginx-config
+          mountPath: /etc/nginx/other.conf
+          subPath: other.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config 
+      restartPolicy: Always      
+      terminationGracePeriodSeconds: 30

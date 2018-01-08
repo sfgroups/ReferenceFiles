@@ -1,0 +1,33 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+    name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - image: nginx
+          name: nginx
+          env:
+          - name: nginx_DB_HOST
+            value: mysql:3306          
+          ports:
+            - containerPort: 80
+              name: nginx
+          volumeMounts:
+            - name: jenkin-home-storage
+              mountPath: /usr/share/tomcat/html
+      volumes:
+        - name: jenkin-home-storage
+          persistentVolumeClaim:
+           claimName: local-jenkin-pvc

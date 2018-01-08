@@ -1,0 +1,27 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    ingress.kubernetes.io/ssl-redirect: "true"
+  name: httpbin-web-server
+  namespace: default
+spec:
+  tls:
+  - hosts:
+    - httpbin.sfgroups.com
+    secretName: tls-secret
+  rules:
+  - host: httpbin.sfgroups.com
+    http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName:  httpbin
+          servicePort: 8000
+      - path: "/web"
+        backend:
+          serviceName:  nginx-svc
+          servicePort: 80
+ 

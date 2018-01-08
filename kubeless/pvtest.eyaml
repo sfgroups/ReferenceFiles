@@ -1,0 +1,45 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: nettools-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/data"
+---   
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nettools-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+---       
+kind: Pod
+apiVersion: v1
+metadata:
+  name: nettools-pod
+spec:
+  volumes:
+    - name: nettools-storage
+      persistentVolumeClaim:
+       claimName: nettools-claim
+  containers:
+    - name: nettools-container
+      image: sfgroups/nettools
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: nettools-storage

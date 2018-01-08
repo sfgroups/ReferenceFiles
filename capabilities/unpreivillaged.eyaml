@@ -1,0 +1,40 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  namespace: default
+  name: metallb-controller
+  labels:
+    app: metallb-controller
+spec:
+  selector:
+    matchLabels:
+      app: metallb-controller
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: metallb-controller
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: metallb-controller
+        image: sfgroups/nettools
+        args:
+        - --port=80
+        ports:
+        - name: monitoring
+          containerPort: 80
+        resources:
+          limits:
+            cpu: "0.1"
+            memory: "100Mi"
+        securityContext:
+          capabilities:
+            add:
+              - NET_BIND_SERVICE
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+      securityContext:
+        runAsNonRoot: true
+        

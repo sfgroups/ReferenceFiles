@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sfgtomcat
+  labels:
+    k8s-app: sfgtomcat
+    tier: frontend
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: sfgtomcat
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: sfgtomcat
+        # Any image is permissable as long as:
+        # 1. It serves a 404 page at /
+        # 2. It serves 200 on a /healthz endpoint
+        image: tomcat:9.0.2-jre8-alpine
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        lifecycle:                
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8080
+        
