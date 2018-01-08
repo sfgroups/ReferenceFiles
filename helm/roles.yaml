@@ -1,0 +1,15 @@
+  kind: Role
+  apiVersion: rbac.authorization.k8s.io/v1beta1
+  metadata:
+    namespace: 10001-myapp-dev
+    name: deployment-manager
+  rules:
+  - apiGroups: ["", "extensions", "apps"]
+    resources: ["deployments", "replicasets", "pods","services","pods/portforward"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"] 
+  - apiGroups: [""]
+    resources: [ "pods/log"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
