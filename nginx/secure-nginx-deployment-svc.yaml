@@ -21,7 +21,7 @@ spec:
         tier: frontend
     spec:      
       containers:        
-      - image: nginx
+      - image: webserver.sfgroups.com:5000/sfgroups/nettools_min
         imagePullPolicy: IfNotPresent
         name: nginx
         lifecycle:
@@ -31,12 +31,18 @@ spec:
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
+        volumeMounts:
+        - name: app-storage
+          mountPath: /data/app
       restartPolicy: Always      
       terminationGracePeriodSeconds: 30
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
-        fsGroup: 2000        
+        fsGroup: 2000
+      volumes:
+      - name: app-storage
+        emptyDir: {}        
 ---
 apiVersion: v1
 kind: Service
