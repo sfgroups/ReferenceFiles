@@ -1,0 +1,87 @@
+---
+- hosts: all
+  gather_facts: no  
+    
+  tasks:
+    
+    - name: Check whether grub contains ipv6.disable=1
+      command: grep -q "^GRUB_CMDLINE_LINUX=.* ipv6.disable=1 " /root/grub
+      register: checkvalue
+      ignore_errors: True
+      changed_when: False
+
+    - name: update  /root/grub
+      lineinfile:
+        dest: /root/grub
+        state: present
+        backrefs: yes
+        regexp: '^(GRUB_CMDLINE_LINUX=.*quiet)(.*)$'
+        line: '\1 ipv6.disable=1 \2'
+      when: not checkvalue.rc == 0  
+ ---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - shell: echo "hello world"
+        
+    ## either disable
+    - name: Disable IPv6 with sysctl
+      sysctl: name={{ item }} value=1 state=present
+      with_items:
+        - net.ipv6.conf.all.disable_ipv6
+        - net.ipv6.conf.default.disable_ipv6
+        - net.ipv6.conf.lo.disable_ipv6
+    
+    - name: RedHat | disable ipv6 in sysconfig/network
+      lineinfile:
+        dest: /etc/sysconfig/network
+        regexp: "^{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backup: yes
+        create: yes
+      with_items:
+        - { regexp: 'NETWORKING_IPV6=.*', line: 'NETWORKING_IPV6=NO' }
+        - { regexp: 'IPV6INIT=.*', line: 'IPV6INIT=no' }
+      
+    - name: Check to see if grub has been configured
+      stat: 
+        path: /boot/grub2/grub.cfg
+      register: grub_config
+
+    - name: Write grub configuration file
+      command: grub2-mkconfig -o /boot/grub2/grub.cfg
+      when: grub_config.stat.exists == False
+
+    - name: 4.2.3 Enable Auditing for Processes That Start Prior to auditd
+      lineinfile:
+        state: present
+        dest: /root/grub
+        backrefs: yes
+        regexp: '^(GRUB_CMDLINE_LINUX=(?!.*audit)\"[^\"]+)(\".*)'
+        line: '\1 audit=1\2'
+      tags: grub
+
+    - name: Add ipv6.disable=1 in grub file
+      lineinfile: 
+        dest: /root/grub
+        backup: True
+        backrefs: True
+        state: present
+        regexp: '(^\s+kernel(\s+(?!ipv6.disable=1)*[\w=/\-\.]+)*)\s*$'
+        line: '\1 ipv6.disable=1 \2'
+      tags: grub6
+    
+    - name: remove ipv6 hosts entry
+      shell: sed -i -e '/::/d' -e '/IPv6/d' /etc/hosts
+      become: yes
+    - name: find ipv6 kernel parameter
+      shell: sysctl --all  2>/dev/null | egrep '^net.ipv6\..*disable' | awk '{print $1}'
+      register: ipv6_sysctl_list
+      changed_when: false
+      check_mode: no
+      become: yes
+
+    - name: add ipv6 kernel parameter
+      sysctl: name={{ item }} value=1
+      with_items: "{{ ipv6_sysctl_list.stdout_lines }}"
+      become: yes
