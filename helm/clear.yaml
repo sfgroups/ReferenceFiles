@@ -1,0 +1,55 @@
+replicaCount: 1
+logLevel: info
+insecureTls: false
+image:
+  repository: quay.io/coreos/clair
+  tag: latest
+  pullPolicy: Always
+service:
+  name: clair
+  type: NodePort
+  internalApiPort: 6060
+  externalApiPort: 6060
+  internalHealthPort: 6061
+  externalHealthPort: 6061
+ingress:
+  enabled: true
+  hosts:
+  annotations:
+resources:
+  limits:
+    cpu: 100m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+config:
+  postgresURI: "postgres://test:test@clair-postgress-postgresql:5432/test?sslmode=disable"
+  paginationKey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
+  updateInterval: 2h
+  notificationWebhookEndpoint:
+  enabledUpdaters:
+  - debian
+  - ubuntu
+  - rhel
+  - oracle
+  - alpine
+  enabledNamespaceDetectors:
+  - os-release
+  - lsb-release
+  - apt-sources
+  - alpine-release
+  - redhat-release
+  enabledFeatureListers:
+  - apk
+  - dpkg
+  - rpm
+postgresql:
+  cpu: 1000m
+  memory: 1Gi
+  postgresUser: clair
+  postgresPassword: clair
+  postgresDatabase: clair
+
+  persistence:
+    size: 10Gi
