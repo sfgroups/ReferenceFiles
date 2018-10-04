@@ -1,0 +1,42 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-etcd
+  namespace: kube-system
+spec:
+  # activeDeadlineSeconds: 100
+  schedule: "10 1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            # Same image as in /etc/kubernetes/manifests/etcd.yaml
+            image: k8s.gcr.io/etcd-amd64:3.2.18
+            env:
+            - name: ETCDCTL_API
+              value: "3"
+            command: ["/bin/sh"]
+            args: ["-c", "export FILE=/backup/etcd-snapshot-$(date +%Y-%m-%d_%H:%M:%S_%Z).db; etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/healthcheck-client.crt --key=/etc/kubernetes/pki/etcd/healthcheck-client.key snapshot save $FILE && gzip $FILE "]
+            volumeMounts:
+            - mountPath: /etc/kubernetes/pki/etcd
+              name: etcd-certs
+              readOnly: true
+            - mountPath: /backup
+              name: etcd-pv-storage
+          restartPolicy: OnFailure
+          nodeSelector:
+            worktype: etcdbackup
+          tolerations:
+          - effect: NoSchedule
+            operator: Exists
+          hostNetwork: true
+          volumes:
+            - name: etcd-certs
+              hostPath:
+                path: /etc/kubernetes/pki/etcd
+                type: DirectoryOrCreate
+            - name: etcd-pv-storage
+              persistentVolumeClaim:
+                claimName: etcd-pv-claim
