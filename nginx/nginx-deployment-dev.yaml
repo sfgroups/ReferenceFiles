@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: nginx-dev
+  name: nginx-dev
+spec:
+  selector:
+    matchLabels:
+      name: nginx-dev
+  template:
+    metadata:
+      labels:
+        name: nginx-dev
+    spec:
+      containers:
+      - image: nginx
+        name: nginx-dev
+        lifecycle:
+            postStart:
+              exec:
+                command:
+                  - "sh"
+                  - "-c"
+                  - >
+                    mkdir -p -m 755 /usr/share/nginx/html/app;
+                    echo "body {width: 35em; background-color: lightblue;}" >/usr/share/nginx/html/app/style.css;
+                    echo "<html><head><title>Welcome to DEV</title>" > /usr/share/nginx/html/app/index.html;
+                    echo '<link rel="stylesheet" type="text/css" href="style.css"></head><body>' >>/usr/share/nginx/html/app/index.html;
+                    echo "<h1> SVC-dev - Nginx version $NGINX_VERSION </h1>" >> /usr/share/nginx/html/app/index.html;
+                    echo '</body></html>'     >> /usr/share/nginx/html/app/index.html;                
+            preStop:
+              exec:
+                command: ["/usr/sbin/nginx","-s","quit"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-svc-dev
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    name: nginx-dev
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /app
+  name: app-dev
+spec:
+  rules:
+  - host: api.sfgroups.com
+    http:
+      paths:
+      - backend:
+          serviceName: nginx-svc-dev
+          servicePort: 80
+        path: /app-dev
