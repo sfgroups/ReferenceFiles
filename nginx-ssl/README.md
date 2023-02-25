@@ -9,6 +9,10 @@ openssl req -new -key server.key -out server.csr  -subj "/CN=IT/O=sfgroups"
 openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
 ```
 
+https://syslink.pl/cipherlist/
+
+https://ciphersuite.info/cs/?security=secure
+
 ### orginal text below
 
 
